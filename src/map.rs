@@ -6,10 +6,12 @@ const NUM_TILES: usize = (SCREEN_HEIGHT * SCREEN_WIDTH) as usize;
 pub enum TileType {
     Wall,
     Floor,
+    Exit
 }
 
 pub struct Map {
     pub tiles: Vec<TileType>,
+    pub revealed_tiles: Vec<bool>
 }
 
 pub fn map_idx(x: i32, y: i32) -> usize {
@@ -21,6 +23,7 @@ impl Map {
     pub fn new() -> Self {
         Self {
             tiles: vec![TileType::Floor; NUM_TILES],
+            revealed_tiles: vec![false; NUM_TILES]
         }
     }
 
@@ -30,8 +33,9 @@ impl Map {
     }
 
     pub fn can_enter_tile(&self, point : Point) -> bool {
-        self.in_bounds(point)
-            && self.tiles[map_idx(point.x, point.y)]==TileType::Floor
+        self.in_bounds(point) && (
+            self.tiles[map_idx(point.x, point.y)]==TileType::Floor ||
+            self.tiles[map_idx(point.x, point.y)]==TileType::Exit)
     }
 
     pub fn try_idx(&self, point : Point) -> Option<usize> {
@@ -72,6 +76,10 @@ impl Algorithm2D for Map {
 
 
 impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx as usize] != TileType::Floor
+    }
+
     fn get_available_exits(&self, idx: usize) -> SmallVec<[(usize, f32); 10]> {
         let mut exits = SmallVec::new();
         let location = self.index_to_point2d(idx);
